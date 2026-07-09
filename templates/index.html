@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block title %}ToDo App - Inicio{% endblock %}
+
+{% block content %}
+<header class="main-header">
+    <div class="header-left">
+        <button class="btn btn-sm btn-outline-secondary d-lg-none me-2" id="menuToggle">
+            <i class="bi bi-list"></i>
+        </button>
+        <h1 class="page-title">Mis Tareas</h1>
+    </div>
+    <div class="header-right">
+        <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" class="form-control" id="searchInput" placeholder="Buscar tareas..." autocomplete="off">
+            <button class="btn-search-clear d-none" id="searchClear">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <button class="btn btn-primary" id="addTaskBtn">
+            <i class="bi bi-plus-lg"></i>
+            <span class="d-none d-sm-inline">Nueva Tarea</span>
+        </button>
+    </div>
+</header>
+
+<div class="dashboard-cards">
+    <div class="stat-card total">
+        <div class="stat-icon">
+            <i class="bi bi-list-check"></i>
+        </div>
+        <div class="stat-info">
+            <span class="stat-number" id="statTotal">0</span>
+            <span class="stat-label">Total</span>
+        </div>
+    </div>
+    <div class="stat-card pending">
+        <div class="stat-icon">
+            <i class="bi bi-hourglass-split"></i>
+        </div>
+        <div class="stat-info">
+            <span class="stat-number" id="statPending">0</span>
+            <span class="stat-label">Pendientes</span>
+        </div>
+    </div>
+    <div class="stat-card completed">
+        <div class="stat-icon">
+            <i class="bi bi-check-all"></i>
+        </div>
+        <div class="stat-info">
+            <span class="stat-number" id="statCompleted">0</span>
+            <span class="stat-label">Completadas</span>
+        </div>
+    </div>
+    <div class="stat-card progress">
+        <div class="stat-icon">
+            <i class="bi bi-graph-up-arrow"></i>
+        </div>
+        <div class="stat-info">
+            <span class="stat-number" id="statProgress">0%</span>
+            <span class="stat-label">Progreso</span>
+        </div>
+    </div>
+</div>
+
+<div class="progress-bar-container">
+    <div class="progress" role="progressbar" aria-label="Progreso general">
+        <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+    </div>
+</div>
+
+<div id="activeFilters" class="active-filters d-none">
+    <span class="active-filters-label">Filtros activos:</span>
+    <div class="active-filter-tags" id="filterTags"></div>
+    <button class="btn btn-sm btn-link" id="clearFiltersBtn">Limpiar todo</button>
+</div>
+
+<div class="tasks-container" id="tasksContainer">
+    <div class="loading-indicator" id="loadingIndicator">
+        <div class="spinner"></div>
+        <span>Cargando tareas...</span>
+    </div>
+    <div class="tasks-list" id="tasksList"></div>
+    <div class="empty-state d-none" id="emptyState">
+        <div class="empty-icon">
+            <i class="bi bi-clipboard-check"></i>
+        </div>
+        <h4>No hay tareas</h4>
+        <p id="emptyStateMsg">Crea tu primera tarea para empezar.</p>
+        <button class="btn btn-primary" id="emptyAddBtn">
+            <i class="bi bi-plus-lg"></i> Crear tarea
+        </button>
+    </div>
+</div>
+
+<div class="modal fade" id="taskModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Nueva Tarea</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <form id="taskForm" novalidate>
+                <div class="modal-body">
+                    <input type="hidden" id="taskId" value="">
+                    <div class="mb-3">
+                        <label for="taskTitle" class="form-label">Título</label>
+                        <input type="text" class="form-control" id="taskTitle" placeholder="¿Qué necesitas hacer?" required maxlength="200" autofocus>
+                        <div class="invalid-feedback" id="titleError"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="taskDescription" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="taskDescription" rows="3" placeholder="Añade más detalles..."></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="taskPriority" class="form-label">Prioridad</label>
+                            <select class="form-select" id="taskPriority">
+                                <option value="alta">Alta</option>
+                                <option value="media" selected>Media</option>
+                                <option value="baja">Baja</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="taskCategory" class="form-label">Categoría</label>
+                            <select class="form-select" id="taskCategory">
+                                <option value="trabajo">Trabajo</option>
+                                <option value="universidad">Universidad</option>
+                                <option value="personal" selected>Personal</option>
+                                <option value="compras">Compras</option>
+                                <option value="salud">Salud</option>
+                                <option value="otras">Otras</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="taskDueDate" class="form-label">Fecha y hora límite</label>
+                        <input type="datetime-local" class="form-control" id="taskDueDate">
+                        <div class="invalid-feedback" id="dateError"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="taskReminder" class="form-label">Recordatorio</label>
+                        <select class="form-select" id="taskReminder">
+                            <option value="">Sin recordatorio</option>
+                            <option value="0">En el momento exacto</option>
+                            <option value="5">5 minutos antes</option>
+                            <option value="15">15 minutos antes</option>
+                            <option value="30">30 minutos antes</option>
+                            <option value="60">1 hora antes</option>
+                            <option value="1440">1 día antes</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="saveTaskBtn">
+                        <i class="bi bi-check-lg"></i> Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="delete-icon">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+                <h5 class="mb-2">¿Eliminar tarea?</h5>
+                <p class="text-muted mb-0" id="deleteTaskTitle">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer justify-content-center border-0 pt-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="bi bi-trash"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="keyboard-shortcuts-hint" id="keyboardHint">
+    <div class="shortcuts-content">
+        <h6>Atajos de teclado</h6>
+        <div class="shortcut-item"><kbd>Ctrl + K</kbd> <span>Buscar tareas</span></div>
+        <div class="shortcut-item"><kbd>N</kbd> <span>Nueva tarea</span></div>
+        <div class="shortcut-item"><kbd>Esc</kbd> <span>Cerrar modal</span></div>
+    </div>
+</div>
+{% endblock %}
